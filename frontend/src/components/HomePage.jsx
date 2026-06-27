@@ -3,7 +3,6 @@ import nochronosLogo from '../assets/nochronosLogo.png';
 import Navbar from './Navbar';
 const HomePage = ({ userData }) => {
     return (
-        /* Screen height locked to 100vh with no global overflow to create an "App Desktop" environment */
         <div className='flex flex-col bg-black h-screen text-white overflow-hidden font-sans select-none'>
             
             <Navbar userData = {userData}/>
@@ -20,8 +19,6 @@ const HomePage = ({ userData }) => {
                                 </span>
                             )}
                         </div>
-                        
-                        {/* Dynamic Container using flex-1 and overflow-y-auto to handle custom-scrolling perfectly */}
                         <div className="messages flex-1 overflow-y-auto space-y-2.5 pr-1 custom-scrollbar">
                             {userData?.myInbox && userData.myInbox.length > 0 ? (
                                 userData.myInbox.map((msg) => (
@@ -46,7 +43,6 @@ const HomePage = ({ userData }) => {
                                     </div>
                                 ))
                             ) : (
-                                /* Empty state centers itself precisely inside the container bounds */
                                 <div className="h-full flex flex-col items-center justify-center text-center p-6 text-zinc-600">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 mb-2 text-zinc-700">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
@@ -58,7 +54,7 @@ const HomePage = ({ userData }) => {
                         </div>
                     </div>
 
-                    {/* RIGHT CONTAINER (POOLS DESKTOP CONTENT) */}
+                    {/* RIGHT CONTAINER */}
                     <div className="right w-2/3 p-8 bg-[#181818]/40 h-full overflow-y-auto custom-scrollbar flex flex-col justify-between">
                         <div>
                             <div className="border-b border-zinc-900 pb-5 mb-6">
@@ -66,16 +62,14 @@ const HomePage = ({ userData }) => {
                                 <h2 className="text-2xl font-extrabold text-white tracking-tight mt-1">Pools Content</h2>
                             </div>
                             
-                            {/* Content wrapper ensuring layout readability */}
+                            
                             <div className="max-w-xl text-sm text-zinc-400 leading-relaxed space-y-4">
                                 <p>Select an active invoice item or system notification on the left to review ledger details, update payment thresholds, or coordinate splits with group members.</p>
                             </div>
                         </div>
                         
-                        {/* Footer branding element to ground the UI layout */}
-                        <div className="pt-6 border-t border-zinc-900 text-right">
-                            <p className="text-[11px] text-zinc-600 font-medium">nochronos Engine v1.0.4 • Secured via Ledger Protocols</p>
-                        </div>
+                        
+                        
                     </div>
                     
                 </div>
