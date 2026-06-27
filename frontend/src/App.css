@@ -1,0 +1,17 @@
+/* Spotify-style Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px; /* Very thin */
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent; /* Blends into the card background */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #535353; /* Spotify medium gray */
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #b3b3b3; /* Brightens up slightly on hover */
+}

@@ -12,9 +12,33 @@ function App() {
   avatarUrl: "A", 
   
   myInbox: [
-    { id: "m1", title: "Welcome to nochronos", unread: false, date: "2026-06-23" },
-    { id: "m2", title: "Spotify Pool: Jordan requested $3.50", unread: true, date: "2026-06-22" },
-    { id: "m3", title: "Netflix Pool: Monthly bill processed", unread: true, date: "2026-06-20" }
+    { 
+      id: "m1", 
+      title: "Welcome to nochronos", 
+      sender: "nochronos Team",
+      preview: "Thanks for joining us! Here is a quick guide to getting started with your split pools.",
+      time: "10:30 AM",
+      date: "2026-06-23", 
+      unread: false 
+    },
+    { 
+      id: "m2", 
+      title: "Spotify Pool: Jordan requested $3.50", 
+      sender: "nochronos Team",
+      preview: "Hey Alex, here is the request for this month's premium family plan split.",
+      time: "Yesterday",
+      date: "2026-06-22", 
+      unread: true 
+    },
+    { 
+      id: "m3", 
+      title: "Netflix Pool: Monthly bill processed", 
+      sender: "nochronos Team",
+      preview: "Your automated payment of $5.25 for the Premium Ultra HD pool went through successfully.",
+      time: "4 days ago",
+      date: "2026-06-20", 
+      unread: true 
+    }
   ],
   
   myPools: []
