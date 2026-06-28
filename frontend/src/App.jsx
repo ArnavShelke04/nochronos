@@ -23,7 +23,7 @@ function App() {
     },
     { 
       id: "m2", 
-      title: "Spotify Pool: Jordan requested $3.50", 
+      title: "Payment is due", 
       sender: "nochronos Team",
       preview: "Hey Alex, here is the request for this month's premium family plan split.",
       time: "Yesterday",

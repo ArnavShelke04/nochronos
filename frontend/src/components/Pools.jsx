@@ -1,11 +1,64 @@
 import React from 'react'
 
-const Pools = () => {
-  return (
-    <div>
-      
-    </div>
-  )
+const Pools = ({ myPools }) => {
+    
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+            {myPools.length > 0 ? (
+                myPools.map((pool) => (
+                    <div
+                        key={pool.id}
+                        className="bg-[#121212] border border-zinc-900 hover:border-zinc-800 p-5 rounded-2xl flex flex-col justify-between transition-all duration-200 shadow-lg group"
+                        
+                    >
+                        <div>
+                            <div className="flex justify-between items-start mb-3">
+                                <div>
+                                    <span className="text-[10px] font-mono tracking-wider text-zinc-500 uppercase">
+                                        {pool.subscription.category}
+                                    </span>
+                                    <h3 className="text-base font-bold text-white group-hover:text-red-400 transition-colors mt-0.5">
+                                        {pool.subscription.name}
+                                    </h3>
+                                </div>
+                                {/* Member Count Badge */}
+                                <span className="bg-zinc-900 border border-zinc-800 text-zinc-400 text-[11px] font-medium px-2.5 py-1 rounded-full">
+                                    {pool.members.currentCount}/{pool.members.maxCap} spots
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-2 mt-4 text-xs text-zinc-400">
+                                <div className="w-5 h-5 bg-zinc-800 rounded-full flex items-center justify-center font-bold text-[10px] text-zinc-300 border border-zinc-700">
+                                    {pool.creator.avatarUrl}
+                                </div>
+                                <p>Pool by <span className="font-medium text-zinc-300">{pool.creator.name}</span></p>
+                            </div>
+                        </div>
+                        <div className="border-t border-zinc-900/80 mt-5 pt-4 flex justify-between items-center">
+                            <div>
+                                <p className="text-[10px] text-zinc-500 uppercase tracking-wider">Your Share</p>
+                                <p className="text-lg font-black text-white mt-0.5">
+                                    ${pool.payment.amount.toFixed(2)}
+                                    <span className="text-xs font-normal text-zinc-500">/mo</span>
+                                </p>
+                            </div>
+                            <span className="text-[11px] text-zinc-500 bg-zinc-950 px-2.5 py-1 rounded-lg border border-zinc-900 font-mono">
+                                Due Day {pool.payment.dueDate}
+                            </span>
+                        </div>
+                    </div>
+                ))
+            ) : (
+                /* Empty State */
+                <div className="col-span-full border border-dashed border-zinc-800 rounded-2xl p-8 text-center text-zinc-500">
+                    <p className="text-sm font-semibold">No active pools found</p>
+                    <p className="text-xs text-zinc-600 mt-1">Join or create a pool to get started.</p>
+                </div>
+            )}
+            <div className='createButton bg-yellow-400 text-white flex'>
+
+            </div>
+        </div>
+    )
 }
 
 export default Pools
