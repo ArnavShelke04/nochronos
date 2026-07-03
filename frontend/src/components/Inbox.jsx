@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState,useContext } from 'react';
 import MessageModal from './MessageModal'; // Import the new component
+import { userContext } from '../context';
 
-const Inbox = ({ myInbox }) => {
+const Inbox = () => {
+    const userData = useContext(userContext);
+    const myInbox = userData?.myInbox || [];
     const [inboxData, setInboxData] = useState(myInbox);
     const [selectedMessage, setSelectedMessage] = useState(null);
-
     const handleClick = (message) => {
         setInboxData((prevInbox) =>
             prevInbox.map((msg) =>

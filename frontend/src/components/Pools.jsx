@@ -1,15 +1,23 @@
 import React from 'react'
+import { useState,useContext } from 'react'
+import PoolsModals from "./PoolsModals"
+import { userContext } from '../context';
 
-const Pools = ({ myPools }) => {
-    
+
+const Pools = () => {
+    const [selectedPool, setselectedPool] = useState(null)
+    const userData = useContext(userContext)
+    const myPools = userData.myPools;
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
             {myPools.length > 0 ? (
                 myPools.map((pool) => (
                     <div
                         key={pool.id}
-                        className="bg-[#121212] border border-zinc-900 hover:border-zinc-800 p-5 rounded-2xl flex flex-col justify-between transition-all duration-200 shadow-lg group"
-                        
+                        // 1. ADDED THE CLICK ACTION TO UPDATE STATE:
+                        onClick={() => setselectedPool(pool)}
+                        // 2. ADDED cursor-pointer SO USERS KNOW IT'S CLICKABLE:
+                        className="bg-[#121212] border border-zinc-900 hover:border-zinc-800 p-5 rounded-2xl flex flex-col justify-between transition-all duration-200 shadow-lg group cursor-pointer"
                     >
                         <div>
                             <div className="flex justify-between items-start mb-3">
@@ -54,9 +62,8 @@ const Pools = ({ myPools }) => {
                     <p className="text-xs text-zinc-600 mt-1">Join or create a pool to get started.</p>
                 </div>
             )}
-            <div className='createButton bg-yellow-400 text-white flex'>
-
-            </div>
+            
+            <PoolsModals pool={selectedPool} onClose={() => setselectedPool(null)} />
         </div>
     )
 }
