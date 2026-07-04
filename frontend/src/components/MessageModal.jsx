@@ -1,8 +1,8 @@
 import React from 'react';
 
-const MessageModal = ({ isOpen, onClose }) => {
-    // If there is no message active, don't render anything at all
-    if (!isOpen) return null;
+const MessageModal = ({ message, onClose }) => {
+    // 1. If there is no message object active, don't render anything at all
+    if (!message) return null;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fade-in">
@@ -14,7 +14,8 @@ const MessageModal = ({ isOpen, onClose }) => {
                     <div className="flex justify-between items-start">
                         <div>
                             <span className="text-[10px] font-mono tracking-widest text-red-500 uppercase">System Notification</span>
-                            <h3 className="text-lg font-bold text-white mt-1 leading-tight">{isOpen.title}</h3>
+                            {/* 2. Updated from isOpen.title to message.title */}
+                            <h3 className="text-lg font-bold text-white mt-1 leading-tight">{message.title}</h3>
                         </div>
                         
                         {/* Close Button */}
@@ -30,14 +31,14 @@ const MessageModal = ({ isOpen, onClose }) => {
 
                     {/* Meta row */}
                     <div className="flex justify-between items-center text-xs text-zinc-500 mt-4">
-                        <p>Sender: <span className="text-zinc-300 font-medium">{isOpen.sender}</span></p>
-                        <p className="font-mono text-[11px]">{isOpen.date} • {isOpen.time}</p>
+                        <p>Sender: <span className="text-zinc-300 font-medium">{message.sender}</span></p>
+                        <p className="font-mono text-[11px]">{message.date} • {message.time}</p>
                     </div>
                 </div>
 
                 {/* Read-Only Message Body Content */}
                 <div className="text-sm text-zinc-300 leading-relaxed bg-zinc-950/50 border border-zinc-900 p-4 rounded-xl min-h-[120px]">
-                    {isOpen.preview}
+                    {message.preview}
                 </div>
 
                 {/* Footer Status Badge */}
