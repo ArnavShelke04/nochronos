@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // <--- Import this to change paths!
 
-const Loginpage = ({ setUserData }) => {
+const Loginpage = ({ setData }) => { // <--- Destructure 'setData' correctly
     const [username, setUsername] = useState('');
+    const navigate = useNavigate(); // <--- Initialize the redirect tool
 
     const handleLogin = (e) => {
         e.preventDefault();
         if (!username.trim()) return;
 
-        // Mocking a backend response for now with your data structure
         const mockLoggedUser = {
+            id_ : 34584,
             accountName: username,
             avatarUrl: username.charAt(0).toUpperCase(),
             myInbox: [
@@ -17,11 +19,14 @@ const Loginpage = ({ setUserData }) => {
             myPools: []
         };
 
-        // 1. Save it to localStorage so the browser remembers it on refresh
+        // 1. Save it to localStorage
         localStorage.setItem('nochronos_user', JSON.stringify(mockLoggedUser));
+        
+        // 2. Pass it back up to App.jsx state
+        setData(mockLoggedUser);
 
-        // 2. Update state to instantly swap the view to the HomePage
-        setUserData(mockLoggedUser);
+        // 3. FORCE the URL bar to change locations!
+        navigate(`/homepage/${mockLoggedUser.id_}`);
     };
 
     return (

@@ -14,9 +14,9 @@ const Pools = () => {
                 myPools.map((pool) => (
                     <div
                         key={pool.id}
-                        // 1. ADDED THE CLICK ACTION TO UPDATE STATE:
+                        
                         onClick={() => setselectedPool(pool)}
-                        // 2. ADDED cursor-pointer SO USERS KNOW IT'S CLICKABLE:
+                        
                         className="bg-[#121212] border border-zinc-900 hover:border-zinc-800 p-5 rounded-2xl flex flex-col justify-between transition-all duration-200 shadow-lg group cursor-pointer"
                     >
                         <div>
