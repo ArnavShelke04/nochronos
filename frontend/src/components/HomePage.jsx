@@ -2,14 +2,16 @@ import React from 'react';
 import nochronosLogo from '../assets/nochronosLogo.png';
 import Navbar from './Navbar';
 import Inbox from './Inbox';
+import CreatePool from './CreatePool';
 import Pools from './Pools';
 import { IoAdd } from "react-icons/io5";
 import { userContext } from '../context';
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 
 const HomePage = () => {
     const userData = useContext(userContext);
-    
+    const [create, setcreate] = useState(false);
+
     return (
         <div className='flex flex-col bg-black h-screen text-white overflow-hidden font-sans select-none'>
             <Navbar userData={userData} />
@@ -31,14 +33,12 @@ const HomePage = () => {
                         <Inbox myInbox={userData.myInbox} />
                     </div>
 
-                    {/* RIGHT WRAPPER CONTAINER (This acts as the anchor point) */}
-                    
+                    {/* RIGHT WRAPPER CONTAINER */}
                     <div className="right-wrapper w-2/3 h-full relative flex flex-col">
                         
                         {/* THE SCROLLING CONTAINER */}
-                        {/* This handles the scrolling internally, leaving the button untouched on top */}
                         <div className="right-scroll-area w-full h-full p-8 bg-[#181818]/40 overflow-y-auto custom-scrollbar">
-                            <div className='flex flex-col pb-24'> {/* pb-24 ensures content doesn't get hidden behind the button */}
+                            <div className='flex flex-col pb-24'> 
                                 <div className="border-b border-zinc-900 pb-5 mb-6">
                                     <span className="text-[10px] font-bold tracking-widest text-red-500 uppercase">Activity</span>
                                     <h2 className="text-2xl font-extrabold text-white tracking-tight mt-1">My Pools</h2>
@@ -47,14 +47,17 @@ const HomePage = () => {
                             </div>
                         </div>
 
-                        {/* THE FLOATING BUTTON */}
-                        {/* Pinned perfectly to the right-most edge (right-6) of the dashboard wrapper. */}
-                        {/* It will float statically over the scrollbar without breaking its behavior! */}
-                        <button className="absolute bottom-6 right-6 z-50 flex items-center gap-2 text-black text-sm font-bold bg-amber-500 hover:bg-amber-400 p-4 rounded-full shadow-2xl transition-all cursor-pointer">
+                        {/* FIXED BUG: Wrapped setcreate(true) inside an arrow function */}
+                        <button 
+                            onClick={() => setcreate(true)} 
+                            className="absolute bottom-6 right-6 z-50 flex items-center gap-2 text-black text-sm font-bold bg-amber-500 hover:bg-amber-400 p-4 rounded-full shadow-2xl transition-all cursor-pointer"
+                        >
                             <IoAdd className="text-xl" />
                             <span className="uppercase tracking-wider">Create</span>
                         </button>
 
+                        
+                        <CreatePool isOpen={create} onClose={() => setcreate(false)} />
                     </div>
 
                 </div>
