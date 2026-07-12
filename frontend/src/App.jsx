@@ -6,7 +6,7 @@ import HomePage from './components/HomePage';
 import Loginpage from './components/Loginpage';
 
 function App() {
-  // Initialize state directly from localStorage so it persists instantly on page refresh!
+  const [isConnected, setisConnected] = useState("disconnected")
   const [Data, setData] = useState(() => {
     const savedUser = localStorage.getItem('nochronos_user');
     return savedUser ? JSON.parse(savedUser) : null;
@@ -28,7 +28,19 @@ function App() {
       }
     ]
   };
+  const conn = async ()=>{
+    try{let x = await fetch(`http://localhost:3000/homepage/${Data.id_}`);
+    let res = await x.text();
+    console.log(res)}
+    catch(err){
+      console.log("error",err)
+    }
+  }
+  useEffect(() => {
 
+    conn()
+  }, [])
+  
   return (
     <BrowserRouter>
       {/* We pass the active Data (or defaults) down into the context context */}

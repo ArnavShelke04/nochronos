@@ -10,18 +10,18 @@ dotenv.config();
 
 const app = express();
 const port = 3000;
-
-// Body parsing middleware (fixes req.body returning undefined)
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 connectDB();
 // Routes
-app.get('/homepage', (req, res) => {
+app.get('/homepage/:id', (req, res) => {
+  console.log(req.body);
   res.send('Hello World!');
 });
 
 app.post('/homepage/:id', (req, res) => {
-  console.log(req.body); // Express uses req.body, req.form is invalid
+  console.log(req.body);
   res.send('Hello World!');
 });
 
