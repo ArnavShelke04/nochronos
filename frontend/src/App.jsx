@@ -6,13 +6,13 @@ import HomePage from './components/HomePage';
 import Loginpage from './components/Loginpage';
 
 function App() {
-  const [isConnected, setisConnected] = useState("disconnected")
+  const [isConnected, setisConnected] = useState("disconnected");
   const [Data, setData] = useState(() => {
     const savedUser = localStorage.getItem('nochronos_user');
     return savedUser ? JSON.parse(savedUser) : null;
   });
 
-  // Hardcoded fallback data structure for rendering context (Alex)
+  
   const defaultUserData = {
     accountName: Data ? Data.accountName : "Alex",
     avatarUrl: Data ? Data.avatarUrl : "A", 
@@ -28,31 +28,51 @@ function App() {
       }
     ]
   };
-  const conn = async ()=>{
-    try{let x = await fetch(`http://localhost:3000/homepage/${Data.id_}`);
-    let res = await x.text();
-    console.log(res)}
-    catch(err){
-      console.log("error",err)
+  const messageRead = async (message) =>{
+    try {
+      let msg = await fetch(`http://localhost:3000/homepage/${Data.id_}/inbox`,
+        {method: 'PATCH', // or 'PUT'
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            unread: false
+          })
+        })
+        let res = msg.text();
+        console.log(res);
+      } catch (err) {
+        console.log(err);
+      }
     }
-  }
+    const conn = async () => {
+      // 1. Guard clause: Don't fetch if Data or Data.id_ isn't there yet
+      if (!Data || !Data.id_) return;
+      
+      try {
+        let x = await fetch(`http://localhost:3000/homepage/${Data.id_}`);
+        let res = await x.text();
+        console.log(res);
+      } catch (err) {
+        console.log("error", err);
+      }
+    };
+    
+    const contextValue = {
+      userData : defaultUserData,
+      func :messageRead
+    }
   useEffect(() => {
-
-    conn()
-  }, [])
+    // 2. Add Data to the dependency array so this runs whenever Data updates (like after logging in)
+    conn();
+  }, [Data]); 
   
   return (
     <BrowserRouter>
-      {/* We pass the active Data (or defaults) down into the context context */}
-      <userContext.Provider value={defaultUserData}>
+      <userContext.Provider value={contextValue}>
         <Routes>
-          {/* If logged in, redirect root "/" straight to their homepage ID. If not, show Login. */}
           <Route 
             path="/" 
             element={Data ? <Navigate to={`/homepage/${Data.id_}`} replace /> : <Loginpage setData={setData} />} 
           />
-          
-          {/* The Dynamic Route */}
           <Route path="/homepage/:userId" element={<HomePage />} />
         </Routes>
       </userContext.Provider>

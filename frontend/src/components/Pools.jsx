@@ -5,15 +5,18 @@ import { userContext } from '../context';
 
 const Pools = () => {
     const [selectedPool, setselectedPool] = useState(null)
-    const userData = useContext(userContext)
-    const myPools = userData.myPools;
     
-    const currentUserId = userData.user?.id || userData.user?._id;
+    // 1. FIXED: Destructure directly from context (Matches App.jsx setup)
+    const { userData } = useContext(userContext);
+    
+    // Safety guard in case userData hasn't loaded yet
+    const myPools = userData?.myPools || [];
+    const currentUserId = userData?.user?.id || userData?.user?._id || userData?.id_;
 
-    // The function that triggers the PUT request to leave the backend pool
     const handleLeavePool = async (poolId) => {
         try {
-            const response = await fetch(`http://localhost:5000/api/pools/${poolId}/leave`, {
+            // 2. FIXED: Pointing to port 3000 to match the rest of your app routes
+            const response = await fetch(`http://localhost:3000/api/pools/${poolId}/leave`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -84,7 +87,6 @@ const Pools = () => {
                 </div>
             )}
             
-            {/* 3. Pass down everything the Modal needs to figure out leaving logic */}
             <PoolsModals 
                 pool={selectedPool} 
                 onClose={() => setselectedPool(null)} 

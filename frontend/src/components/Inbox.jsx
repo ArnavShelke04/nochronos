@@ -1,13 +1,27 @@
-import React, { useState,useContext } from 'react';
-import MessageModal from './MessageModal'; // Import the new component
+import React, { useState, useContext, useEffect } from 'react';
+import MessageModal from './MessageModal'; 
 import { userContext } from '../context';
 
 const Inbox = () => {
-    const userData = useContext(userContext);
+    // 1. Destructure directly from the context object (don't search for 'contextValue')
+    const { userData, func: messageRead } = useContext(userContext);
     const myInbox = userData?.myInbox || [];
+    
     const [inboxData, setInboxData] = useState(myInbox);
     const [selectedMessage, setSelectedMessage] = useState(null);
+
+    // Keep state in sync if userData changes externally
+    useEffect(() => {
+        setInboxData(myInbox);
+    }, [myInbox]);
+
     const handleClick = (message) => {
+        // 2. Trigger the PATCH request to your backend database if it's unread
+        if (message.unread) {
+            messageRead(message); 
+        }
+
+        // Update local state for immediate UI feedback
         setInboxData((prevInbox) =>
             prevInbox.map((msg) =>
                 msg.id === message.id ? { ...msg, unread: false } : msg
@@ -47,7 +61,6 @@ const Inbox = () => {
                 </div>
             )}
 
-            {/* Render the extracted Modal Component here cleanly */}
             <MessageModal 
                 isOpen={selectedMessage} 
                 onClose={() => setSelectedMessage(null)} 
