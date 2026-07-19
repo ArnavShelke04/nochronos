@@ -23,8 +23,7 @@ const messageSchema = new Schema({
     required: true,
     trim: true
   },
-  //SYSTEM MESSAGES METADATA (Optional but great)
-  // If a system message says "Alex added Bob to the group", you can store references here
+  
   metadata: {
     action: { type: String }, // e.g., 'MEMBER_ADDED', 'EXPENSE_SPLIT'
     targetUserId: { type: Schema.Types.ObjectId, ref: 'User' }

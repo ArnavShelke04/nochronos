@@ -44,7 +44,6 @@ function App() {
       }
     }
     const conn = async () => {
-      // 1. Guard clause: Don't fetch if Data or Data.id_ isn't there yet
       if (!Data || !Data.id_) return;
       
       try {

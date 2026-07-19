@@ -1,18 +1,28 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import mongoose from 'mongoose'; // Moved up with other imports
 import connectDB from './config/db.js';
 import { Pool } from './models/Pool.js';
 import { createPool } from './controllers/dbcontroller.js';
 
+import authRoutes from './routes/auth.js';
+
 dotenv.config();
 
 const app = express();
 const port = 3000;
+
+app.use(express.json())
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.use("/api/auth",authRoutes);
+
+
+
 connectDB();
 // Routes
 app.get('/homepage/:id', (req, res) => {

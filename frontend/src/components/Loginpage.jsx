@@ -1,32 +1,53 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // <--- Import this to change paths!
+import { useNavigate } from 'react-router-dom';
 
-const Loginpage = ({ setData }) => { // <--- Destructure 'setData' correctly
+const Loginpage = ({ setData }) => {
     const [username, setUsername] = useState('');
-    const navigate = useNavigate(); // <--- Initialize the redirect tool
+    const [email, setEmail] = useState(''); // Added email state
+    const [password, setPassword] = useState(''); 
+    const [error, setError] = useState(''); 
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
-        if (!username.trim()) return;
-
-        const mockLoggedUser = {
-            id_ : 34584,
-            accountName: username,
-            avatarUrl: username.charAt(0).toUpperCase(),
-            myInbox: [
-                { id: "m1", title: "Welcome!", sender: "System", preview: "Glad to have you back.", time: "Just Now", unread: true }
-            ],
-            myPools: []
-        };
-
-        // 1. Save it to localStorage
-        localStorage.setItem('nochronos_user', JSON.stringify(mockLoggedUser));
         
-        // 2. Pass it back up to App.jsx state
-        setData(mockLoggedUser);
+        // Validation check to make sure email isn't blank either
+        if (!username.trim() || !email.trim() || !password.trim()) {
+            setError('Please fill in all fields.');
+            return;
+        }
 
-        // 3. FORCE the URL bar to change locations!
-        navigate(`/homepage/${mockLoggedUser.id_}`);
+        setError('');
+        setLoading(true);
+
+        try {
+            const response = await fetch('http://localhost:3000/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: username.trim(),
+                    email: email.trim().toLowerCase(), // Added email to server payload
+                    password: password
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                localStorage.setItem('nochronos_token', result.token);
+                localStorage.setItem('nochronos_user', JSON.stringify(result.user));
+                setData(result.user);
+                navigate(`/homepage/${result.user.id_}`);
+            } else {
+                setError(result.message || 'Authentication failed.');
+            }
+        } catch (err) {
+            console.error('Login error:', err);
+            setError('Could not connect to the authentication server.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -38,6 +59,12 @@ const Loginpage = ({ setData }) => { // <--- Destructure 'setData' correctly
                 </div>
                 
                 <form onSubmit={handleLogin} className="space-y-4">
+                    {error && (
+                        <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-xs p-2.5 rounded-lg font-medium">
+                            {error}
+                        </div>
+                    )}
+
                     <div>
                         <label className="text-xs text-zinc-400 font-semibold block mb-2">Username</label>
                         <input 
@@ -46,10 +73,41 @@ const Loginpage = ({ setData }) => { // <--- Destructure 'setData' correctly
                             onChange={(e) => setUsername(e.target.value)}
                             placeholder="Enter your name..." 
                             className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500"
+                            disabled={loading}
                         />
                     </div>
-                    <button type="submit" className="w-full bg-amber-500 text-black py-2.5 rounded-lg text-sm font-bold hover:bg-amber-400 transition-colors mt-2 cursor-pointer">
-                        Let's Go
+
+                    {/* --- Email Input Section Added Below --- */}
+                    <div>
+                        <label className="text-xs text-zinc-400 font-semibold block mb-2">Email Address</label>
+                        <input 
+                            type="email" 
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="you@example.com" 
+                            className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500"
+                            disabled={loading}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="text-xs text-zinc-400 font-semibold block mb-2">Password</label>
+                        <input 
+                            type="password" 
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="••••••••" 
+                            className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500"
+                            disabled={loading}
+                        />
+                    </div>
+
+                    <button 
+                        type="submit" 
+                        disabled={loading}
+                        className="w-full bg-amber-500 text-black py-2.5 rounded-lg text-sm font-bold hover:bg-amber-400 transition-colors mt-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {loading ? 'Signing in...' : "Let's Go"}
                     </button>
                 </form>
             </div>
