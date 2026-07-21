@@ -5,9 +5,10 @@ import cookieParser from 'cookie-parser';
 import mongoose from 'mongoose'; // Moved up with other imports
 import connectDB from './config/db.js';
 import { Pool } from './models/Pool.js';
-import { createPool } from './controllers/dbcontroller.js';
+
 
 import authRoutes from './routes/auth.js';
+import inboxRoutes from "./routes/inbox.js";
 
 dotenv.config();
 
@@ -18,12 +19,12 @@ app.use(express.json())
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+connectDB();
 
 app.use("/api/auth",authRoutes);
+app.use("/inbox",inboxRoutes)
 
 
-
-connectDB();
 // Routes
 app.get('/homepage/:id', (req, res) => {
   console.log(req.body);

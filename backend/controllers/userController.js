@@ -14,20 +14,22 @@ const generateAccessAndRefreshToken = async(id) =>{
         return {accessToken,refreshToken};
 
     } catch (error) {
-        res.send(error)
+        return error;
     }
 
 }
 
 
 const loginUser = async (req,res) =>{
-    const {name, password, email} = req.body;
-    if(!name){
-        res.status(401).send("Invalid name");
+    const {email,password} = req.body;
+    if(!email){
+        res.status(401).send("Invalid email");
     }
-    const user = await User.findOne({name})
+    const user = await User.findOne({email})
     if(!user){
-        res.status(404).send("No user exists")
+        res.status(404).json({
+            message : "No user found"
+        })
     }
     const isValidPassword = await user.comparePassword(password);
     if(!isValidPassword) {
@@ -36,7 +38,7 @@ const loginUser = async (req,res) =>{
 
     const {accessToken, refreshToken} = await generateAccessAndRefreshToken(user.id);
 
-    const loggedInUser = await User.findById(user.id).select(-password -refreshToken);
+    const loggedInUser = await User.findById(user.id).select("-password -refreshToken");
 
     const options = {
         httpOnly : true,
@@ -47,14 +49,60 @@ const loginUser = async (req,res) =>{
     .cookie("accessToken",accessToken,options)
     .cookie("refreshToken",refreshToken,options)
     .json({
-        user: loggedInUser , accessToken , refreshToken
+        user: loggedInUser , token : accessToken , refreshToken
     })
 }
 
 const logoutUser = async (req,res)=>{
-
+    
 }
 const registerUser = async (req,res)=>{
+    const { name, email, password } = req.body;
+
+    if (!email || !name || !password) {
+        return res.status(400).json({
+            message: "Missing name, email, or password fields"
+        });
+    }
+
+    try {
+        const existingUser = await User.findOne({ 
+            $or: [{ email }, { name }] 
+        });
+
+        if (existingUser) {
+            return res.status(409).json({
+                message: "Username or Email already registered !!"
+            });
+        }
+
+        const user = new User({ name, email, password });
+        await user.save();
+
+        const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
+        
+        const createdUser = await User.findById(user._id).select("-password -refreshToken");
+
+        const options = {
+            httpOnly: true,
+            secure: true
+        };
+
+        return res
+            .status(201)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", refreshToken, options)
+            .json({
+                message: "Registration successful!",
+                user: createdUser,
+                token: accessToken,
+                refreshToken
+            });
+
+    } catch (error) {
+        console.error("Registration error:", error);
+        return res.status(500).json({ message: "Internal server registration error" });
+    }
 
 }
 export {
