@@ -6,73 +6,91 @@ import HomePage from './components/HomePage';
 import Loginpage from './components/Loginpage';
 
 function App() {
-  const [isConnected, setisConnected] = useState("disconnected");
-  const [Data, setData] = useState(() => {
-    const savedUser = localStorage.getItem('nochronos_user');
-    return savedUser ? JSON.parse(savedUser) : null;
-  });
+  const [Data, setData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  
-  const defaultUserData = {
-    accountName: Data ? Data.accountName : "Alex",
-    avatarUrl: Data ? Data.avatarUrl : "A", 
-    myInbox: Data ? Data.myInbox : [],
-    myPools: [
-      {
-        id: "pool-01",
-        subscription: { name: "Spotify Premium Family", category: "Music", totalMonthlyCost: 16.99 },
-        creator: { name: "Jordan", id: "user-883", avatarUrl: "J" },
-        payment: { amount: 3.50, currency: "USD", dueDate: "05" },
-        members: { currentCount: 5, maxCap: 6, memberIds: ["user-123", "user-883"] },
-        status: "active"
+  // Synchronize dynamic active user validation via server on app mounting
+  useEffect(() => {
+    const verifyUserSession = async () => {
+      const token = localStorage.getItem('jwt_token');
+      if (!token) {
+        setIsLoading(false);
+        return;
       }
-    ]
-  };
-  const messageRead = async (message) =>{
-    try {
-      let msg = await fetch(`http://localhost:3000/homepage/${Data.id_}/inbox`,
-        {method: 'PATCH', // or 'PUT'
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            unread: false
-          })
-        })
-        let res = msg.text();
-        console.log(res);
-      } catch (err) {
-        console.log(err);
-      }
-    }
-    const conn = async () => {
-      if (!Data || !Data.id_) return;
-      
       try {
-        let x = await fetch(`http://localhost:3000/homepage/${Data.id_}`);
-        let res = await x.text();
-        console.log(res);
+        const response = await fetch('http://localhost:3000/api/auth/me', {
+          method: 'GET',
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const freshUser = await response.json();
+          setData(freshUser); 
+        } else {
+          localStorage.removeItem('jwt_token'); 
+        }
       } catch (err) {
-        console.log("error", err);
+        console.error("Authentication sync failed:", err);
+      } finally {
+        setIsLoading(false);
       }
     };
-    
-    const contextValue = {
-      userData : defaultUserData,
-      func :messageRead
+
+    verifyUserSession();
+  }, []);
+
+  // RESTful PATCH call targeting a specific message endpoint URL
+  const messageRead = async (messageId) => {
+    if (!Data) return;
+    const token = localStorage.getItem('jwt_token');
+    const userId = Data.id_ || Data._id;
+
+    try {
+      const response = await fetch(`http://localhost:3000/homepage/${userId}/inbox/${messageId}`, {
+        method: 'PATCH',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({ unread: false })
+      });
+      
+      const result = await response.json();
+      console.log("Message marked as read:", result);
+    } catch (err) {
+      console.error("Failed to update message path:", err);
     }
-  useEffect(() => {
-    // 2. Add Data to the dependency array so this runs whenever Data updates (like after logging in)
-    conn();
-  }, [Data]); 
-  
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-amber-500 font-semibold">
+        Loading Nochronos...
+      </div>
+    );
+  }
+
   return (
     <BrowserRouter>
-      <userContext.Provider value={contextValue}>
+      <userContext.Provider value={{ userData: Data, func: messageRead }}>
         <Routes>
+          {/* Root authentication gateway route */}
           <Route 
             path="/" 
-            element={Data ? <Navigate to={`/homepage/${Data.id_}`} replace /> : <Loginpage setData={setData} />} 
+            element={Data ? <Navigate to={`/homepage/${Data.id_ || Data._id}`} replace /> : <Loginpage setData={setData} />} 
           />
-          <Route path="/homepage/:userId" element={<HomePage />} />
+          
+          {/* Main User Dashboard Route */}
+          <Route 
+            path="/homepage/:userId" 
+            element={Data ? <HomePage /> : <Navigate to="/" replace />} 
+          />
+
+          {/* Clean catch-all fallback fallback routing block */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </userContext.Provider>
     </BrowserRouter>
