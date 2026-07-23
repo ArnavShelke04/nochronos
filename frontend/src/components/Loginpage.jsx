@@ -32,8 +32,8 @@ const Loginpage = ({ setData }) => {
 
         // Determine target backend route dynamically
         const endpoint = isRegistering 
-            ? 'http://localhost:3000/api/auth/register' 
-            : 'http://localhost:3000/api/auth/login';
+            ? 'http://localhost:5000/api/auth/register' 
+            : 'http://localhost:5000/api/auth/login';
 
         const payload = isRegistering 
             ? { name: username.trim(), email: email.trim().toLowerCase(), password }

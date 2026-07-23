@@ -12,16 +12,16 @@ function App() {
   // Synchronize dynamic active user validation via server on app mounting
   useEffect(() => {
     const verifyUserSession = async () => {
-      const token = localStorage.getItem('jwt_token');
-      if (!token) {
+      const accessToken = localStorage.getItem('jwt_token');
+      if (!accessToken) {
         setIsLoading(false);
         return;
       }
       try {
-        const response = await fetch('http://localhost:3000/api/auth/me', {
+        const response = await fetch('http://localhost:5000/api/auth/me', {
           method: 'GET',
           headers: { 
-            'Authorization': `Bearer ${token}`,
+            'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/json'
           }
         });
@@ -49,7 +49,7 @@ function App() {
     const userId = Data.id_ || Data._id;
 
     try {
-      const response = await fetch(`http://localhost:3000/homepage/${userId}/inbox/${messageId}`, {
+      const response = await fetch(`http://localhost:5000/homepage/${userId}/inbox/${messageId}`, {
         method: 'PATCH',
         headers: { 
           'Content-Type': 'application/json',
