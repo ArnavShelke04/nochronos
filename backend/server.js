@@ -3,9 +3,9 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import mongoose from 'mongoose'; // Moved up with other imports
-import connectDB from './config/db.js';
+import redis from "./config/redis.js"
 import { Pool } from './models/Pool.js';
-
+import connectDB from "./config/db.js"
 
 import authRoutes from './routes/auth.js';
 import inboxRoutes from "./routes/inbox.js";
