@@ -5,7 +5,7 @@ import './App.css';
 import HomePage from './components/HomePage';
 import Loginpage from './components/Loginpage';
 import AccountSettings from './components/AccountSettings';
-import PoolPage from './components/PoolPage';
+import PoolPage from './components/PoolPage'; // <-- Brought this back!
 
 function App() {
   const [Data, setData] = useState(null);
@@ -28,7 +28,6 @@ function App() {
 
       if (response.ok) {
         const result = await response.json();
-        // Since we refactored backend to use ApiResponse, the user object is inside result.data
         const freshUser = result.data || result;
         setData(freshUser); 
       } else {
@@ -41,19 +40,17 @@ function App() {
     }
   };
 
-  // Synchronize dynamic active user validation via server on app mounting
   useEffect(() => {
     verifyUserSession();
   }, []);
 
-  // RESTful PATCH call targeting a specific message endpoint URL
   const messageRead = async (messageId) => {
     if (!Data) return;
     const token = localStorage.getItem('jwt_token');
     const userId = Data.id_ || Data._id;
 
     try {
-      const response = await fetch(`http://localhost:5000/homepage/${userId}/inbox/${messageId}`, {
+      await fetch(`http://localhost:5000/homepage/${userId}/inbox/${messageId}`, {
         method: 'PATCH',
         headers: { 
           'Content-Type': 'application/json',
@@ -61,9 +58,6 @@ function App() {
         },
         body: JSON.stringify({ unread: false })
       });
-      
-      const result = await response.json();
-      console.log("Message marked as read:", result);
     } catch (err) {
       console.error("Failed to update message path:", err);
     }
@@ -81,21 +75,13 @@ function App() {
     <BrowserRouter>
       <userContext.Provider value={{ userData: Data, func: messageRead, refreshUser: verifyUserSession }}>
         <Routes>
-          {/* Root authentication gateway route */}
-          <Route 
-            path="/" 
-            element={Data ? <Navigate to={`/homepage/${Data.id_ || Data._id}`} replace /> : <Loginpage setData={setData} />} 
-          />
-          
-          {/* Main User Dashboard Route */}
-          <Route 
-            path="/homepage/:userId" 
-            element={Data ? <HomePage /> : <Navigate to="/" replace />} 
-          />
-          {/* Route for logout or settings page */}
+          <Route path="/" element={Data ? <Navigate to={`/homepage/${Data.id_ || Data._id}`} replace /> : <Loginpage setData={setData} />} />
+          <Route path="/homepage/:userId" element={Data ? <HomePage /> : <Navigate to="/" replace />} />
           <Route path="/settings" element={<AccountSettings />} />
+          
+          {/* THE RESTORED POOL ROUTE */}
           <Route path="/pool/:poolId" element={Data ? <PoolPage /> : <Navigate to="/" replace />} />
-          {/* Clean catch-all fallback fallback routing block */}
+          
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </userContext.Provider>

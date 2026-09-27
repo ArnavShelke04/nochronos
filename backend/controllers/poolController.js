@@ -51,8 +51,12 @@ export const searchPools = asyncHandler(async (req, res) => {
   const pools = await Pool.find({
     name: { $regex: query, $options: "i" }
   })
-  .select("name subscription maxMembers currency members")
+  // 1. Added author and renewalDay to the select list
+  .select("name subscription maxMembers currency members author renewalDay")
+  // 2. POPULATE the author so React can actually render author.name and author.avatar
+  .populate("author", "name avatar") 
   .limit(10);
 
+  console.log("2. Mongoose found pools:", pools);
   return res.status(200).json(new ApiResponse(200, pools, "Pools fetched successfully"));
 });

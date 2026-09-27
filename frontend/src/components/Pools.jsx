@@ -1,40 +1,12 @@
-import React from 'react'
-import { useState, useContext } from 'react'
-import PoolsModals from "./PoolsModals"
+import React, { useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { userContext } from '../context';
 
 const Pools = () => {
-    const [selectedPool, setselectedPool] = useState(null)
-    
-    // 1. FIXED: Destructure directly from context (Matches App.jsx setup)
     const { userData } = useContext(userContext);
+    const navigate = useNavigate();
     
-    // Safety guard in case userData hasn't loaded yet
     const myPools = userData?.joinedPools || [];
-    const currentUserId = userData?._id || userData?.id;
-
-    
-    const handleLeavePool = async (poolId) => {
-        try {
-            const response = await fetch(`http://localhost:5000/api/pools/${poolId}/leave`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('jwt_token')}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.ok) {
-                alert("You have left the pool successfully.");
-                setselectedPool(null); 
-            } else {
-                const err = await response.json();
-                alert(err.message);
-            }
-        } catch (error) {
-            console.error("Failed to leave pool:", error);
-        }
-    };
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
@@ -42,7 +14,8 @@ const Pools = () => {
                 myPools.map((pool) => (
                     <div
                         key={pool.id || pool._id}
-                        onClick={() => setselectedPool(pool)}
+                        // REDIRECT TO THE PAGE INSTEAD OF OPENING A MODAL
+                        onClick={() => navigate(`/pool/${pool.id || pool._id}`, { state: { pool } })}
                         className="bg-[#121212] border border-zinc-900 hover:border-zinc-800 p-5 rounded-2xl flex flex-col justify-between transition-all duration-200 shadow-lg group cursor-pointer"
                     >
                         <div>
@@ -52,11 +25,11 @@ const Pools = () => {
                                         {pool.subscription?.category}
                                     </span>
                                     <h3 className="text-base font-bold text-white group-hover:text-red-400 transition-colors mt-0.5">
-                                        {pool.subscription?.name}
+                                        {pool.subscription?.name || pool.name}
                                     </h3>
                                 </div>
                                 <span className="bg-zinc-900 border border-zinc-800 text-zinc-400 text-[11px] font-medium px-2.5 py-1 rounded-full">
-                                    {pool.members?.length}/{pool.maxMembers} spots
+                                    {pool.members?.length || 1}/{pool.maxMembers} spots
                                 </span>
                             </div>
                             <div className="flex items-center gap-2 mt-4 text-xs text-zinc-400">
@@ -74,7 +47,7 @@ const Pools = () => {
                             <div>
                                 <p className="text-[10px] text-zinc-500 uppercase tracking-wider">Your Share</p>
                                 <p className="text-lg font-black text-white mt-0.5">
-                                    ${(pool.subscription?.monthly_cost / pool.maxMembers).toFixed(2)}
+                                    ${pool.subscription?.monthly_cost ? (pool.subscription.monthly_cost / pool.maxMembers).toFixed(2) : "0.00"}
                                     <span className="text-xs font-normal text-zinc-500">/mo</span>
                                 </p>
                             </div>
@@ -91,14 +64,9 @@ const Pools = () => {
                 </div>
             )}
             
-            <PoolsModals 
-                pool={selectedPool} 
-                onClose={() => setselectedPool(null)} 
-                onLeavePool={handleLeavePool}
-                currentUserId={currentUserId}
-            />
+            {/* NOTE: We completely removed PoolsModals from here! */}
         </div>
     )
 }
 
-export default Pools
+export default Pools;

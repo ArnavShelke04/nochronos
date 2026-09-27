@@ -6,14 +6,13 @@ const Navbar = ({ userData }) => {
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const navigate = useNavigate();
     const dropdownRef = useRef(null);
+    const searchRef = useRef(null);
 
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
     const [showResults, setShowResults] = useState(false);
-    const searchRef = useRef(null);
 
-    // Search effect with debounce
     useEffect(() => {
         const fetchResults = async () => {
             if (!searchQuery.trim()) {
@@ -41,23 +40,10 @@ const Navbar = ({ userData }) => {
         return () => clearTimeout(timer);
     }, [searchQuery]);
 
-    // Close search results if clicked outside
     useEffect(() => {
         const handleClickOutside = (event) => {
-            if (searchRef.current && !searchRef.current.contains(event.target)) {
-                setShowResults(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
-    // Close the dropdown if the user clicks anywhere outside of it
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setDropdownOpen(false);
-            }
+            if (searchRef.current && !searchRef.current.contains(event.target)) setShowResults(false);
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) setDropdownOpen(false);
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -74,26 +60,19 @@ const Navbar = ({ userData }) => {
             console.error("Logout error:", error);
         } finally {
             localStorage.removeItem('jwt_token');
-            navigate('/'); // Redirect to base URL (which routes to login)
+            navigate('/'); 
         }
     };
 
     return (
         <nav className="sticky top-0 z-50 flex w-full justify-between items-center px-8 py-4 bg-black/80 backdrop-blur-md border-b border-zinc-900">
-            {/* Left: Logo */}
             <div className="flex items-center gap-3">
-                <h1 
-                    onClick={() => navigate('/')}
-                    className="text-2xl font-black tracking-tighter text-white lowercase cursor-pointer"
-                >
+                <h1 onClick={() => navigate('/')} className="text-2xl font-black tracking-tighter text-white lowercase cursor-pointer">
                     nochronos
                 </h1>
             </div>
             
-            {/* Right: Search and Avatar */}
             <div className="flex items-center gap-6">
-                
-                {/* Search Bar */}
                 <div className="relative" ref={searchRef}>
                     <input
                         type="text"
@@ -108,7 +87,6 @@ const Navbar = ({ userData }) => {
                     />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-zinc-500 font-mono pointer-events-none">⌘K</span>
                     
-                    {/* Search Results Dropdown */}
                     {showResults && searchQuery.trim() && (
                         <div className="absolute top-full mt-2 w-full bg-[#181818] border border-zinc-800 rounded-xl shadow-2xl py-2 max-h-80 overflow-y-auto animate-fade-in z-50">
                             {isSearching ? (
@@ -119,7 +97,8 @@ const Navbar = ({ userData }) => {
                                         key={pool._id} 
                                         className="px-4 py-3 hover:bg-zinc-800/50 cursor-pointer border-b border-zinc-800/50 last:border-0 transition-colors"
                                         onClick={() => {
-                                            navigate(`/pool/${pool._id}`);
+                                            // NAVIGATE TO THE PAGE & PASS POOL DATA IN STATE
+                                            navigate(`/pool/${pool._id}`, { state: { pool } });
                                             setShowResults(false);
                                             setSearchQuery('');
                                         }}
@@ -129,7 +108,7 @@ const Navbar = ({ userData }) => {
                                             <span className="text-xs bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded-full">{pool.currency}</span>
                                         </div>
                                         <div className="flex items-center gap-3 text-xs text-zinc-500">
-                                            <span>{pool.subscription}</span>
+                                            <span>{pool.subscription?.name}</span>
                                             <span>•</span>
                                             <span>{pool.members?.length || 1}/{pool.maxMembers} Members</span>
                                         </div>
@@ -142,9 +121,7 @@ const Navbar = ({ userData }) => {
                     )}
                 </div>
 
-                {/* Profile Dropdown Wrapper */}
                 <div className="relative" ref={dropdownRef}>
-                    {/* Your original Avatar profile badge */}
                     <button 
                         onClick={() => setDropdownOpen(!dropdownOpen)}
                         className="flex items-center justify-center w-10 h-10 rounded-full bg-red-700 hover:bg-red-600 font-bold text-sm tracking-wide text-white border border-red-800/50 shadow-lg shadow-red-900/20 active:scale-95 transition-transform duration-100"
@@ -152,39 +129,23 @@ const Navbar = ({ userData }) => {
                         {userData?.name ? userData.name[0].toUpperCase() : 'A'}
                     </button>
 
-                    {/* The Floating Dropdown Menu */}
                     {dropdownOpen && (
                         <div className="absolute right-0 mt-3 w-56 bg-[#181818] border border-zinc-800 rounded-xl shadow-2xl py-2 animate-fade-in origin-top-right">
-                            
-                            {/* User Info Header */}
                             <div className="px-4 py-3 border-b border-zinc-800 mb-1">
-                                <p className="text-sm font-bold text-white truncate">
-                                    {userData?.name || "User Account"}
-                                </p>
-                                <p className="text-xs text-zinc-500 truncate">
-                                    {userData?.email || "No email provided"}
-                                </p>
+                                <p className="text-sm font-bold text-white truncate">{userData?.name || "User Account"}</p>
+                                <p className="text-xs text-zinc-500 truncate">{userData?.email || "No email provided"}</p>
                             </div>
-
-                            {/* Settings Link */}
                             <button 
-                                onClick={() => {
-                                    setDropdownOpen(false);
-                                    navigate('/settings'); 
-                                }}
+                                onClick={() => { setDropdownOpen(false); navigate('/settings'); }}
                                 className="w-full px-4 py-2.5 text-left text-sm text-zinc-300 hover:bg-zinc-800/50 hover:text-white flex items-center gap-3 transition-colors"
                             >
-                                <IoSettingsOutline className="text-lg text-zinc-400" />
-                                Account Settings
+                                <IoSettingsOutline className="text-lg text-zinc-400" /> Account Settings
                             </button>
-
-                            {/* Logout Link */}
                             <button 
                                 onClick={handleLogout}
                                 className="w-full px-4 py-2.5 text-left text-sm text-red-500 hover:bg-red-500/10 flex items-center gap-3 transition-colors mt-1"
                             >
-                                <IoLogOutOutline className="text-lg" />
-                                Sign Out
+                                <IoLogOutOutline className="text-lg" /> Sign Out
                             </button>
                         </div>
                     )}
@@ -193,5 +154,4 @@ const Navbar = ({ userData }) => {
         </nav>
     )
 }
-
 export default Navbar;
