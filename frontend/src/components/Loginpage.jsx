@@ -49,11 +49,14 @@ const Loginpage = ({ setData }) => {
             const result = await response.json();
 
             if (response.ok) {
-                // Aligned to match the 'jwt_token' read expectation inside App.jsx
-                localStorage.setItem('jwt_token', result.token); 
-                setData(result.user);
+                // Since backend uses ApiResponse, payload is inside result.data
+                const dataPayload = result.data || result;
                 
-                const targetId = result.user.id_ || result.user._id;
+                // Aligned to match the 'jwt_token' read expectation inside App.jsx
+                localStorage.setItem('jwt_token', dataPayload.token || dataPayload.accessToken); 
+                setData(dataPayload.user);
+                
+                const targetId = dataPayload.user.id_ || dataPayload.user._id;
                 navigate(`/homepage/${targetId}`);
             } else {
                 setError(result.message || 'Authentication failed.');

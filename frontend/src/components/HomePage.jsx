@@ -9,16 +9,16 @@ import { userContext } from '../context';
 import { useContext, useState } from 'react';
 
 const HomePage = () => {
-    const userData = useContext(userContext);
+    const { userData } = useContext(userContext);
     const [create, setcreate] = useState(false);
 
     return (
-        <div className='flex flex-col bg-black h-screen text-white overflow-hidden font-sans select-none'>
+        <div className='flex flex-col bg-black h-screen text-white overflow-hidden font-sans select-none relative'>
             <Navbar userData={userData} />
             <main className="flex-1 p-6 md:p-8 bg-zinc-950 overflow-hidden">
                 
                 {/* Main Dashboard Container */}
-                <div className="w-full h-full flex justify-center items-stretch bg-[#121212] border border-zinc-900 rounded-2xl overflow-hidden shadow-2xl">
+                <div className="w-full h-full relative flex justify-center items-stretch bg-[#121212] border border-zinc-900 rounded-2xl overflow-hidden shadow-2xl">
                     
                     {/* LEFT CONTAINER (INBOX) */}
                     <div className="left w-1/4 flex flex-col p-5 bg-[#121212] h-full border-r border-zinc-900/80">
@@ -34,7 +34,7 @@ const HomePage = () => {
                     </div>
 
                     {/* RIGHT WRAPPER CONTAINER */}
-                    <div className="right-wrapper w-2/3 h-full relative flex flex-col">
+                    <div className="right-wrapper w-2/3 h-full flex flex-col">
                         
                         {/* THE SCROLLING CONTAINER */}
                         <div className="right-scroll-area w-full h-full p-8 bg-[#181818]/40 overflow-y-auto custom-scrollbar">
@@ -47,21 +47,21 @@ const HomePage = () => {
                             </div>
                         </div>
 
-                        {/* FIXED BUG: Wrapped setcreate(true) inside an arrow function */}
+                        {/* CREATE BUTTON */}
                         <button 
                             onClick={() => setcreate(true)} 
-                            className="absolute bottom-6 right-6 z-50 flex items-center gap-2 text-black text-sm font-bold bg-amber-500 hover:bg-amber-400 p-4 rounded-full shadow-2xl transition-all cursor-pointer"
+                            className="absolute bottom-6 right-6 z-30 flex items-center gap-2 text-black text-sm font-bold bg-amber-500 hover:bg-amber-400 p-4 rounded-full shadow-2xl transition-all cursor-pointer"
                         >
                             <IoAdd className="text-xl" />
                             <span className="uppercase tracking-wider">Create</span>
                         </button>
-
-                        
-                        <CreatePool isOpen={create} onClose={() => setcreate(false)} />
                     </div>
 
                 </div>
             </main>
+
+            {/* HOISTED MODAL: Placed at the root level so fixed positioning and blur cover the full screen properly */}
+            <CreatePool isOpen={create} onClose={() => setcreate(false)} />
         </div>
     );
 }

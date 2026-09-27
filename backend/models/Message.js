@@ -1,39 +1,59 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 const { Schema } = mongoose;
 
-const messageSchema = new Schema({
-  _id: { type: Schema.Types.ObjectId, auto: true },
-  type: {
-    type: String,
-    enum: ['chat', 'system'], 
-    required: true
+const messageSchema = new Schema(
+  {
+    type: {
+      type: String,
+      enum: ["chat", "system"],
+      required: true,
+    },
+    groupId: {
+      type: Schema.Types.ObjectId,
+      ref: "Pool", 
+      required: function () {
+        return this.type === "chat"; 
+      }, 
+    },
+    recipientId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: function () {
+        return this.type === "system" && !this.groupId;
+      },
+    },
+    author: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: function () {
+        // System messages don't need an author (they come from the app)
+        return this.type === "chat";
+      },
+    },
+    content: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    metadata: {
+      action: { 
+        type: String,
+        enum: ["payment_required", "member_added", "payment_done", "welcome_back"],
+      },
+      targetUserId: { type: Schema.Types.ObjectId, ref: "User" },
+      poolId: { type: Schema.Types.ObjectId, ref: "Pool" },
+      amount: { type: Number } 
+    },
   },
-  groupId: {
-    type: Schema.Types.ObjectId,
-    ref: 'Group',
-    required: function() { return this.type === 'chat'; } // Only required for group chats
-  },
-  author: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: function() { return this.type === 'chat'; }
-  },
-  content: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  
-  metadata: {
-    action: { type: String }, // e.g., 'MEMBER_ADDED', 'EXPENSE_SPLIT'
-    targetUserId: { type: Schema.Types.ObjectId, ref: 'User' }
+  {
+    timestamps: true,
   }
+);
 
-}, {
-  timestamps: true 
-});
 
-// Indexing for ultra-fast WebSocket fetches (sorts messages by group and time)
 messageSchema.index({ groupId: 1, createdAt: -1 });
 
-export const Message = mongoose.model('Message', messageSchema);
+
+messageSchema.index({ recipientId: 1, createdAt: -1 });
+
+export const Message = mongoose.model("Message", messageSchema);

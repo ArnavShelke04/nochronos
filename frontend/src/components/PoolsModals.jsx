@@ -22,7 +22,7 @@ export const PoolsModals = ({ pool, onClose, onLeavePool, currentUserId }) => {
                 <div className="p-6 border-b border-zinc-900 flex justify-between items-center bg-[#181818]/40">
                     <div>
                         <h2 className="text-xl font-bold">{pool.subscription?.name}</h2>
-                        <p className="text-xs text-zinc-500">Next billing date: Day {pool.payment?.dueDate}</p>
+                        <p className="text-xs text-zinc-500">Next billing date: Day {pool.renewalDay ? new Date(pool.renewalDay).getDate() : '?'}</p>
                     </div>
                     <button onClick={onClose} className="text-zinc-400 hover:text-white transition-colors">✕</button>
                 </div>
@@ -37,7 +37,7 @@ export const PoolsModals = ({ pool, onClose, onLeavePool, currentUserId }) => {
                         <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800 flex justify-between items-center">
                             <div>
                                 <h3 className="text-sm font-semibold text-zinc-400 mb-2">Your Status</h3>
-                                <p className="text-sm text-zinc-300">Your Share: ${pool.payment?.amount?.toFixed(2)} /mo</p>
+                                <p className="text-sm text-zinc-300">Your Share: ${(pool.subscription?.monthly_cost / pool.maxMembers).toFixed(2)} /mo</p>
                             </div>
                             
                             {/* Leave Pool Action */}

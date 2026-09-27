@@ -4,41 +4,45 @@ import { userContext } from './context';
 import './App.css';
 import HomePage from './components/HomePage';
 import Loginpage from './components/Loginpage';
+import AccountSettings from './components/AccountSettings';
+import PoolPage from './components/PoolPage';
 
 function App() {
   const [Data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const verifyUserSession = async () => {
+    const accessToken = localStorage.getItem('jwt_token');
+    if (!accessToken) {
+      setIsLoading(false);
+      return;
+    }
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/me', {
+        method: 'GET',
+        headers: { 
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        // Since we refactored backend to use ApiResponse, the user object is inside result.data
+        const freshUser = result.data || result;
+        setData(freshUser); 
+      } else {
+        localStorage.removeItem('jwt_token'); 
+      }
+    } catch (err) {
+      console.error("Authentication sync failed:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Synchronize dynamic active user validation via server on app mounting
   useEffect(() => {
-    const verifyUserSession = async () => {
-      const accessToken = localStorage.getItem('jwt_token');
-      if (!accessToken) {
-        setIsLoading(false);
-        return;
-      }
-      try {
-        const response = await fetch('http://localhost:5000/api/auth/me', {
-          method: 'GET',
-          headers: { 
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (response.ok) {
-          const freshUser = await response.json();
-          setData(freshUser); 
-        } else {
-          localStorage.removeItem('jwt_token'); 
-        }
-      } catch (err) {
-        console.error("Authentication sync failed:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     verifyUserSession();
   }, []);
 
@@ -75,7 +79,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <userContext.Provider value={{ userData: Data, func: messageRead }}>
+      <userContext.Provider value={{ userData: Data, func: messageRead, refreshUser: verifyUserSession }}>
         <Routes>
           {/* Root authentication gateway route */}
           <Route 
@@ -88,7 +92,9 @@ function App() {
             path="/homepage/:userId" 
             element={Data ? <HomePage /> : <Navigate to="/" replace />} 
           />
-
+          {/* Route for logout or settings page */}
+          <Route path="/settings" element={<AccountSettings />} />
+          <Route path="/pool/:poolId" element={Data ? <PoolPage /> : <Navigate to="/" replace />} />
           {/* Clean catch-all fallback fallback routing block */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

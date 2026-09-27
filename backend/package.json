@@ -11,14 +11,18 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "axios": "^1.19.0",
     "bcrypt": "^6.0.0",
     "bullmq": "^5.79.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
+    "cron": "^4.4.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "ioredis": "^5.11.1",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.7.3"
+    "mongoose": "^9.7.3",
+    "node-cron": "^4.6.0",
+    "socket.io": "^4.8.4"
   }
 }

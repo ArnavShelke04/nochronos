@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useForm } from 'react-hook-form';
+import { userContext } from '../context';
 
 // Organized platforms categorized by sector
 const PLATFORMS_BY_CATEGORY = {
@@ -21,12 +22,15 @@ const PLATFORMS_BY_CATEGORY = {
 };
 
 const CreatePool = ({ isOpen, onClose }) => {
+    const { refreshUser } = useContext(userContext);
+    
     const {
         register,
-        handleSubmit: handleFormSubmit, // Renamed to avoid naming collision
+        handleSubmit: handleFormSubmit, 
+        setError,
         formState: { errors, isSubmitting }
     } = useForm();
-    
+
     const [activeCategory, setActiveCategory] = useState('entertainment');
     const [selectedPlatform, setSelectedPlatform] = useState(PLATFORMS_BY_CATEGORY.entertainment[0]);
 
@@ -39,22 +43,49 @@ const CreatePool = ({ isOpen, onClose }) => {
 
     // Calculate split cost dynamically
     const costPerSlot = (selectedPlatform.totalCost / selectedPlatform.maxMembers).toFixed(2);
-    
+
     // React Hook Form passes validated data directly here
-    const onSubmit = (data) => {
+    const onSubmit = async (data) => {
         const payload = {
-            poolName: data.poolName, // Gathered from RHF register
-            platformName: `${selectedPlatform.name} Group`,
-            category: activeCategory,
-            platformId: selectedPlatform.id,
-            appName: selectedPlatform.name,
+            name: data.poolName,
+            subscription: {
+                name: selectedPlatform.name,
+                monthly_cost: selectedPlatform.totalCost,
+                category: activeCategory,
+            },
             maxMembers: selectedPlatform.maxMembers,
-            totalMonthlyCost: selectedPlatform.totalCost,
+            renewalDay: data.renewalDay || new Date(),
+            platformId: selectedPlatform.id,
             fixedSlotPrice: parseFloat(costPerSlot)
         };
-        console.log(data.poolName)
-        console.log("Submitting Categorized Payload to backend:", payload);
-        onClose();
+
+        try {
+            const token = localStorage.getItem('jwt_token');
+            const response = await fetch('http://localhost:5000/api/pools/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                setError("poolName", { type: "manual", message: result.message || "Failed to create pool" });
+                return;
+            }
+
+            // Successfully created
+            if (refreshUser) {
+                await refreshUser(); // Refresh the user profile to fetch updated pool list
+            }
+            onClose();
+        } catch (error) {
+            console.error("Error creating pool:", error);
+            setError("poolName", { type: "manual", message: "Server connection error" });
+        }
     };
 
     if (!isOpen) return null;
@@ -62,7 +93,7 @@ const CreatePool = ({ isOpen, onClose }) => {
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm">
             <div className="w-11/12 max-w-md bg-[#121212] border border-zinc-900 p-6 rounded-2xl flex flex-col shadow-2xl text-white">
-                
+
                 {/* Header */}
                 <div className="flex justify-between items-center mb-5">
                     <h2 className="text-lg font-bold">Create a Subscription Pool</h2>
@@ -71,7 +102,7 @@ const CreatePool = ({ isOpen, onClose }) => {
 
                 {/* Submit uses React Hook Form handler wrapper wrapper */}
                 <form onSubmit={handleFormSubmit(onSubmit)} className="space-y-5">
-                    
+
                     {/* Category Navigation Tabs */}
                     <div>
                         <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Select Category</label>
@@ -81,11 +112,10 @@ const CreatePool = ({ isOpen, onClose }) => {
                                     key={category}
                                     type="button"
                                     onClick={() => handleCategoryChange(category)}
-                                    className={`flex-1 py-1.5 text-xs font-medium capitalize rounded-lg transition-all ${
-                                        activeCategory === category
-                                        ? 'bg-zinc-900 border border-zinc-800 text-white font-semibold'
-                                        : 'text-zinc-400 hover:text-zinc-200'
-                                    }`}
+                                    className={`flex-1 py-1.5 text-xs font-medium capitalize rounded-lg transition-all ${activeCategory === category
+                                            ? 'bg-zinc-900 border border-zinc-800 text-white font-semibold'
+                                            : 'text-zinc-400 hover:text-zinc-200'
+                                        }`}
                                 >
                                     {category}
                                 </button>
@@ -104,11 +134,10 @@ const CreatePool = ({ isOpen, onClose }) => {
                                         key={platform.id}
                                         type="button"
                                         onClick={() => setSelectedPlatform(platform)}
-                                        className={`w-full flex items-center justify-between p-3 rounded-xl border text-left transition-all ${
-                                            isSelected 
-                                            ? 'bg-purple-600/10 border-purple-500 text-white' 
-                                            : 'bg-zinc-900/40 border-zinc-900 text-zinc-300 hover:border-zinc-800'
-                                        }`}
+                                        className={`w-full flex items-center justify-between p-3 rounded-xl border text-left transition-all ${isSelected
+                                                ? 'bg-purple-600/10 border-purple-500 text-white'
+                                                : 'bg-zinc-900/40 border-zinc-900 text-zinc-300 hover:border-zinc-800'
+                                            }`}
                                     >
                                         <div className="flex items-center gap-3">
                                             <span className="text-xl bg-zinc-900 p-1.5 rounded-lg border border-zinc-800">{platform.icon}</span>
@@ -130,16 +159,15 @@ const CreatePool = ({ isOpen, onClose }) => {
                     {/* Pool Name Input Field */}
                     <div>
                         <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Pool Display Name</label>
-                        <input 
-                            type="text" 
-                            {...register("poolName", { 
-                                required: "This field is required", 
+                        <input
+                            type="text"
+                            {...register("poolName", {
+                                required: "This field is required",
                                 minLength: { value: 3, message: "Minimum length is 3 characters" }
                             })}
-                            placeholder={`e.g., Share my ${selectedPlatform.name}`} 
-                            className={`w-full bg-zinc-950 border rounded-xl px-4 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none transition-colors ${
-                                errors.poolName ? 'border-red-500 focus:border-red-500' : 'border-zinc-900 focus:border-purple-500'
-                            }`}
+                            placeholder={`e.g., Share my ${selectedPlatform.name}`}
+                            className={`w-full bg-zinc-950 border rounded-xl px-4 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none transition-colors ${errors.poolName ? 'border-red-500 focus:border-red-500' : 'border-zinc-900 focus:border-purple-500'
+                                }`}
                         />
                         {errors.poolName && (
                             <span className="text-red-500 text-xs mt-1 block">{errors.poolName.message}</span>
@@ -160,15 +188,15 @@ const CreatePool = ({ isOpen, onClose }) => {
 
                     {/* Action buttons */}
                     <div className="flex gap-3">
-                        <button 
-                            type="button" 
+                        <button
+                            type="button"
                             onClick={onClose}
                             className="flex-1 bg-zinc-950 hover:bg-zinc-900 border border-zinc-900 text-zinc-400 rounded-xl py-2.5 text-sm font-medium transition-colors"
                         >
                             Cancel
                         </button>
-                        <button 
-                            type="submit" 
+                        <button
+                            type="submit"
                             disabled={isSubmitting}
                             className="flex-1 bg-purple-600 hover:bg-purple-500 disabled:bg-purple-800 text-white rounded-xl py-2.5 text-sm font-medium transition-colors shadow-lg shadow-purple-600/20"
                         >

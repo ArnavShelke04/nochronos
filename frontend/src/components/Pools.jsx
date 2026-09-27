@@ -10,16 +10,16 @@ const Pools = () => {
     const { userData } = useContext(userContext);
     
     // Safety guard in case userData hasn't loaded yet
-    const myPools = userData?.myPools || [];
-    const currentUserId = userData?.user?.id || userData?.user?._id || userData?.id_;
+    const myPools = userData?.joinedPools || [];
+    const currentUserId = userData?._id || userData?.id;
 
+    
     const handleLeavePool = async (poolId) => {
         try {
-            // 2. FIXED: Pointing to port 3000 to match the rest of your app routes
-            const response = await fetch(`http://localhost:3000/api/pools/${poolId}/leave`, {
+            const response = await fetch(`http://localhost:5000/api/pools/${poolId}/leave`, {
                 method: 'PUT',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Authorization': `Bearer ${localStorage.getItem('jwt_token')}`,
                     'Content-Type': 'application/json'
                 }
             });
@@ -56,26 +56,30 @@ const Pools = () => {
                                     </h3>
                                 </div>
                                 <span className="bg-zinc-900 border border-zinc-800 text-zinc-400 text-[11px] font-medium px-2.5 py-1 rounded-full">
-                                    {pool.members?.currentCount || pool.members?.length}/{pool.members?.maxCap || pool.maxMembers} spots
+                                    {pool.members?.length}/{pool.maxMembers} spots
                                 </span>
                             </div>
                             <div className="flex items-center gap-2 mt-4 text-xs text-zinc-400">
-                                <div className="w-5 h-5 bg-zinc-800 rounded-full flex items-center justify-center font-bold text-[10px] text-zinc-300 border border-zinc-700">
-                                    {pool.creator?.avatarUrl || pool.author?.name?.charAt(0)}
+                                <div className="w-5 h-5 bg-zinc-800 rounded-full flex items-center justify-center font-bold text-[10px] text-zinc-300 border border-zinc-700 overflow-hidden">
+                                    {pool.author?.avatar ? (
+                                        <img src={pool.author.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                                    ) : (
+                                        pool.author?.name?.charAt(0) || "U"
+                                    )}
                                 </div>
-                                <p>Pool by <span className="font-medium text-zinc-300">{pool.creator?.name || pool.author?.name}</span></p>
+                                <p>Pool by <span className="font-medium text-zinc-300">{pool.author?.name || "Unknown"}</span></p>
                             </div>
                         </div>
                         <div className="border-t border-zinc-900/80 mt-5 pt-4 flex justify-between items-center">
                             <div>
                                 <p className="text-[10px] text-zinc-500 uppercase tracking-wider">Your Share</p>
                                 <p className="text-lg font-black text-white mt-0.5">
-                                    ${pool.payment?.amount?.toFixed(2)}
+                                    ${(pool.subscription?.monthly_cost / pool.maxMembers).toFixed(2)}
                                     <span className="text-xs font-normal text-zinc-500">/mo</span>
                                 </p>
                             </div>
                             <span className="text-[11px] text-zinc-500 bg-zinc-950 px-2.5 py-1 rounded-lg border border-zinc-900 font-mono">
-                                Due Day {pool.payment?.dueDate}
+                                Due Day {pool.renewalDay ? new Date(pool.renewalDay).getDate() : '?'}
                             </span>
                         </div>
                     </div>

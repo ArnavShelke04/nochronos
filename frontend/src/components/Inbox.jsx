@@ -3,20 +3,20 @@ import MessageModal from './MessageModal';
 import { userContext } from '../context';
 
 const Inbox = () => {
-    // 1. Destructure directly from the context object (don't search for 'contextValue')
+    
     const { userData, func: messageRead } = useContext(userContext);
-    const myInbox = userData?.myInbox || [];
+    const myInbox = userData?.myInbox;
     
     const [inboxData, setInboxData] = useState(myInbox);
     const [selectedMessage, setSelectedMessage] = useState(null);
 
-    // Keep state in sync if userData changes externally
+    
     useEffect(() => {
-        setInboxData(myInbox);
+        setInboxData(myInbox || []);
     }, [myInbox]);
 
     const handleClick = (message) => {
-        // 2. Trigger the PATCH request to your backend database if it's unread
+       
         if (message.unread) {
             messageRead(message); 
         }
@@ -62,7 +62,7 @@ const Inbox = () => {
             )}
 
             <MessageModal 
-                isOpen={selectedMessage} 
+                message={selectedMessage} 
                 onClose={() => setSelectedMessage(null)} 
             />
         </div>
