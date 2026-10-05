@@ -16,9 +16,14 @@ import connectDB from "./config/db.js";
 import authRoutes from "./routes/auth.js";
 import inboxRoutes from "./routes/inbox.js";
 import poolRoutes from "./routes/pools.js";
+import { stripeWebhook } from "./controllers/poolController.js";
+import { startDailyRenewalCron, runDailyRenewal } from "./cron/dailyRenewal.js";
 
 const app = express();
 const port = 5000;
+
+// Stripe Webhook (MUST be before express.json)
+app.post("/api/pools/webhook", express.raw({ type: "application/json" }), stripeWebhook);
 
 app.use(express.json());
 app.use(cors());
@@ -41,6 +46,32 @@ app.post("/homepage/:id", (req, res) => {
   res.send("Hello World!");
 });
 
+// Hidden endpoint: manually trigger the midnight renewal task
+// Protected by ADMIN_SECRET header to prevent unauthorized access
+app.post("/run-midnight-task", async (req, res) => {
+  const secret = req.headers["x-admin-secret"];
+  if (!process.env.ADMIN_SECRET || secret !== process.env.ADMIN_SECRET) {
+    return res.status(403).json({ message: "Forbidden" });
+  }
+
+  try {
+    console.log("[ManualTrigger] /run-midnight-task called");
+    const result = await runDailyRenewal();
+    return res.status(200).json({
+      success: true,
+      message: "Midnight task executed",
+      result,
+    });
+  } catch (err) {
+    console.error("[ManualTrigger] Error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Midnight task failed",
+      error: err.message,
+    });
+  }
+});
+
 // Global error handler
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
@@ -56,6 +87,9 @@ app.use((err, req, res, next) => {
 // Start the server with app.listen, then attach socket.io to it
 const server = app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
+
+  // Boot the midnight cron job
+  startDailyRenewalCron();
 });
 
 const io = new Server(server, {
@@ -72,6 +106,12 @@ io.on("connection", (socket) => {
   socket.on("join_pool", async (poolId) => {
     socket.join(poolId);
     console.log(`User ${socket.id} joined pool: ${poolId}`);
+    
+    if (!mongoose.Types.ObjectId.isValid(poolId)) {
+      console.error(`Invalid poolId received: ${poolId}`);
+      socket.emit("chat_history", []);
+      return;
+    }
     
     try {
       const messages = await Message.find({ groupId: poolId, type: "chat" })
@@ -97,7 +137,7 @@ io.on("connection", (socket) => {
   socket.on("send_message", async (data) => {
     console.log("Received send_message:", data);
     
-    if (!data.poolId || !data.message || !data.senderId) {
+    if (!data.poolId || !data.message || !data.senderId || !mongoose.Types.ObjectId.isValid(data.poolId)) {
       console.error("Invalid message data:", data);
       return;
     }

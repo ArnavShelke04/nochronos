@@ -8,13 +8,22 @@ services:
     environment:
       - REDIS_HOST=redis # This is the crucial part!
       - REDIS_PORT=6379
+      - REDIS_URL=redis://redis:6379
+      - ADMIN_SECRET=${ADMIN_SECRET:-change-me-before-production}
       # Add your other env vars here:
       # - PORT=5000
       # - REFRESH_SECRET_KEY=your_secret
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
 
   redis:
     image: redis:alpine
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+

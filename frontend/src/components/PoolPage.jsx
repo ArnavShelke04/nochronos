@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import { userContext } from '../context';
 import Navbar from './Navbar';
-import { IoSend } from 'react-icons/io5';
+import { IoSend, IoWallet } from 'react-icons/io5';
 
 const PoolPage = () => {
     // 1. Grab params from URL, and pool data from router state!
@@ -121,6 +121,18 @@ const PoolPage = () => {
                                 <h2 className="text-2xl font-bold">{displayTitle}</h2>
                             </div>
                             <p className="text-sm text-zinc-500 mt-1 ml-10">Next billing date: Day {pool?.renewalDay ? new Date(pool.renewalDay).getDate() : '?'}</p>
+                        </div>
+                        <div className="flex items-center gap-3 bg-zinc-900/80 px-4 py-2 rounded-xl border border-zinc-800">
+                            <div className="bg-amber-500/20 p-2 rounded-lg">
+                                <IoWallet className="text-amber-500 text-xl" />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">Pool Wallet</span>
+                                <span className="text-lg font-bold text-white">
+                                    ${(pool?.walletBalance || 0).toFixed(2)} 
+                                    <span className="text-xs text-zinc-500 font-normal ml-1">/ ${(monthlyCost || 0).toFixed(2)} needed</span>
+                                </span>
+                            </div>
                         </div>
                     </div>
 

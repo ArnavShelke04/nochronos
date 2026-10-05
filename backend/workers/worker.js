@@ -2,49 +2,60 @@ import { Worker } from "bullmq";
 import redis from "../config/redis.js";
 import { Pool } from "../models/Pool.js";
 import { Message } from "../models/Message.js";
+import { Transaction } from "../models/Transaction.js";
 
 
 const myWorker = new Worker('ledgerQueue', async job => {
   const job_id = job.data._id;
-  const pool = await Pool.findById(job_id)
-  if(!pool || !pool.members){
+  const pool = await Pool.findById(job_id);
+  
+  if (!pool || !pool.members) {
     return null;
   }
+  
   const poolName = pool.name;
   const members = pool.members;
-  // Code for splitting the charges.
-  const totalCharge = pool.subscription.monthly_cost;
-  
-  // Calculate charge per head rounded to 2 decimal places to avoid floating point issues
-  const chargePerHead = Number((totalCharge / pool.maxMembers).toFixed(2));
+  const monthlyCost = pool.subscription.monthly_cost;
 
-  const totalMembersExcludeHost = members.length - 1;
-  // Calculate charge for host maintaining exact precision of 2 decimal places
-  const chargeHost = Number((totalCharge - (totalMembersExcludeHost * chargePerHead)).toFixed(2));
+  // Ledger wallet logic
+  if (pool.walletBalance >= monthlyCost) {
+    // 1. Deduct amount safely
+    pool.walletBalance -= monthlyCost;
+    
+    // 2. Extend the renewal day by 30 days
+    const nextRenewal = new Date(pool.renewalDay);
+    nextRenewal.setDate(nextRenewal.getDate() + 30);
+    pool.renewalDay = nextRenewal;
+    
+    await pool.save();
 
-  const messagesToInsert = [];
-
-  for (const member of members) {
-    // author is stored in pool.author, not hostId
-    const isHost = member._id.toString() === pool.author.toString(); 
-    const amountOwed = isHost ? chargeHost : chargePerHead;
-    // Venmo code 
-
-    messagesToInsert.push({
-      type: "system",
-      recipientId: member._id,
-      content: `Your Payment for the Pool ${poolName} is pending`,
-      metadata : {
-        action : "payment_required",
-        targetUserId : member._id,
-        poolId : pool._id,
-        amount : amountOwed
-      }
+    // 3. Log a SUBSCRIPTION_PAYOUT transaction
+    await Transaction.create({
+      poolId: pool._id,
+      amount: monthlyCost,
+      type: "SUBSCRIPTION_PAYOUT",
     });
+
+    console.log(`Successfully deducted $${monthlyCost} for pool ${pool.name}`);
+
+  } else {
+    // INSUFFICIENT FUNDS
+    pool.status = "PAUSED_INSUFFICIENT_FUNDS";
+    await pool.save();
+
+    console.log(`Pool ${pool.name} paused due to insufficient funds.`);
+    
+    // Alert members via Message system
+    const messagesToInsert = members.map(member => ({
+      type: "system",
+      recipientId: member._id ? member._id : member, 
+      content: `Your pool ${poolName} is paused due to insufficient wallet balance. Please add funds.`,
+      metadata: {
+        action: "pool_paused",
+        poolId: pool._id
+      }
+    }));
+
+    await Message.insertMany(messagesToInsert);
   }
-
-  await Message.insertMany(messagesToInsert);
-
-  
-
 }, { connection: redis });

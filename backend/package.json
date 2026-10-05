@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test:redis": "node scripts/smokeTestRedis.js",
+    "run:midnight": "node scripts/runMidnightTask.js"
   },
   "keywords": [],
   "author": "",
@@ -23,6 +26,8 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.7.3",
     "node-cron": "^4.6.0",
-    "socket.io": "^4.8.4"
+    "qrcode": "^1.5.4",
+    "socket.io": "^4.8.4",
+    "stripe": "^23.0.0"
   }
 }

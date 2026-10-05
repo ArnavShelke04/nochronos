@@ -56,8 +56,13 @@ const poolSchema = new Schema(
 
     status: {
       type: String,
-      enum: ["Active", "Full", "Closed"],
+      enum: ["Active", "Full", "Closed", "PAUSED_INSUFFICIENT_FUNDS"],
       default: "Active",
+    },
+    walletBalance: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
 
     renewalDay: {
